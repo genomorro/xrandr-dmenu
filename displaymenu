@@ -1,0 +1,83 @@
+#! /bin/bash
+
+command="xrandr"
+function connectedDisplays {
+  xrandr | grep " connected" | cut -d " " -f 1
+}
+
+function resolutions {
+  if [ "$(xrand | grep -i "$1" -A 40 | grep -v "$1" | grep connected | wc -l)" -eq 0 ]; then
+    xrandr | grep -i "$1" -A 40 | grep -v "$1"
+  else  
+    xrandr | grep -i "$1" -A 40 | grep -v "$1" | grep -B 40 -m 1 connected | grep -v connected
+  fi
+}
+
+noOfActiveDisplays="$(xrandr --listactivemonitors | grep -i 'Monitors:' | sed -e 's/Monitors: //')"
+
+function isOn {
+  xrandr --listactivemonitors | grep $1 | wc -l
+}
+
+display=$(connectedDisplays | dmenu -i -l 10)
+command="$command --output $display"
+
+another=false
+if [ "$noOfActiveDisplays" -eq 2 ]; then
+  another="$(xrandr --listactivemonitors | grep -vi 'Monitors:' | grep -v $display | rev | cut -d ' ' -f 1 | rev)"
+fi
+
+function selectAnother {
+  if [ $another ]; then
+    echo $another
+  else
+    connectedDisplays | grep -v "$display" | dmenu -i -l 10
+  fi
+}
+
+options="cancel"
+if [ "$(isOn $display)" -eq 1 ]; then
+  options="set resolution\nrotate left\nrotate right\ninvert\n$options"
+  if [ "$noOfActiveDisplays" -gt 1 ]; then
+    if [ "$noOfActiveDisplays" -gt 2 ]; then
+      options="move left of ...\nmove right of ...\nmove above ...\n move bellow ...\n$options" 
+    else
+      options="move left of $another\nmove right of $another\nmove above $another\nmove bellow $another\n$options" 
+    fi
+    options="turn off\n$options"
+  fi
+else
+  options="turn on\n$options"
+fi
+
+opt=$(echo -e $options | dmenu -l 10)
+
+case "$opt" in
+  "cancel") 
+    exit 0 ;;
+  "turn on") 
+    command="$command --auto" ;;
+  "turn off") 
+    command="$command --off" ;;
+  "rotate left")
+    command="$command --rotate left" ;;
+  "rotate right")
+    command="$command --rotate right" ;;
+  "invert")
+    command="$command --rotate inverted" ;;
+  "set resolution")
+    resolution="$(resolutions $display | dmenu -l 10 | cut -d " " -f 4)"
+    command="$command --mode $resolution" ;;
+  "move right of"*) 
+    command="$command --rightof $(selectAnother)" ;;
+  "move left of"*)
+    command="$command --leftof $(selectAnother)" ;;
+  "move above"*) 
+    command="$command --above $(selectAnother)"  ;;
+  "move bellow"*) 
+    command="$command --bellow $(selectAnother)"  ;;
+esac
+
+if [ "$(echo -e "no\nyes" | dmenu -i -p "run: $command")" == "yes" ]; then
+  echo "$command" | sh
+fi 
