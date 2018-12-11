@@ -69,9 +69,9 @@ case "$opt" in
     resolution="$(resolutions $display | dmenu -l 10 | cut -d " " -f 4)"
     command="$command --mode $resolution" ;;
   "move right of"*) 
-    command="$command --rightof $(selectAnother)" ;;
+    command="$command --right-of $(selectAnother)" ;;
   "move left of"*)
-    command="$command --leftof $(selectAnother)" ;;
+    command="$command --left-of $(selectAnother)" ;;
   "move above"*) 
     command="$command --above $(selectAnother)"  ;;
   "move bellow"*) 
