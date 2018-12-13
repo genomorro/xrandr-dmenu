@@ -1,19 +1,32 @@
 #! /bin/bash
+set -e
+
+#TODO: do xrandr queries only once and reuse the results.
 
 command="xrandr"
 function connectedDisplays {
   xrandr | grep " connected" | cut -d " " -f 1
 }
 
+# List available resolutions for display identifier
+# given as a first parameter
 function resolutions {
-  if [ "$(xrand | grep -i "$1" -A 40 | grep -v "$1" | grep connected | wc -l)" -eq 0 ]; then
-    xrandr | grep -i "$1" -A 40 | grep -v "$1"
-  else  
-    xrandr | grep -i "$1" -A 40 | grep -v "$1" | grep -B 40 -m 1 connected | grep -v connected
+  local dp="$(xrandr | grep -i "$1" -A 40 | grep -v "$1")"
+  if [ "$(echo "$dp" | grep connected | wc -l)" -eq 0 ]; then
+    # Display was the last one listed
+    echo "$dp"
+  else
+    # Display was not the last one. Cut out the rest of the lines
+    echo "$dp" | grep -B 40 -m 1 connected | grep -v connected
   fi
 }
 
-noOfActiveDisplays="$(xrandr --listactivemonitors | grep -i 'Monitors:' | sed -e 's/Monitors: //')"
+# TODO: Find a better way to do this.
+noOfActiveDisplays="$( \
+  xrandr --listactivemonitors \
+  | grep -i 'Monitors:' \
+  | sed -e 's/Monitors: //' \
+)"
 
 function isOn {
   xrandr --listactivemonitors | grep $1 | wc -l
@@ -24,11 +37,20 @@ command="$command --output $display"
 
 another=false
 if [ "$noOfActiveDisplays" -eq 2 ]; then
-  another="$(xrandr --listactivemonitors | grep -vi 'Monitors:' | grep -v $display | rev | cut -d ' ' -f 1 | rev)"
+  another="$( \
+    xrandr --listactivemonitors \
+    | grep -vi 'Monitors:' \
+    | grep -v $display \
+    | rev \
+    | cut -d ' ' -f 1 \
+    | rev \
+  )"
 fi
 
+# Select another display.
+# echo $another if it has value, othervise perform a dmenu prompt
 function selectAnother {
-  if [ ! -z "$another" ]; then
+  if [ "$another" ]; then
     echo "$another"
   else
     connectedDisplays | grep -v "$display" | dmenu -i -l 10
@@ -40,9 +62,17 @@ if [ "$(isOn $display)" -eq 1 ]; then
   options="set resolution\nrotate left\nrotate right\ninvert\n$options"
   if [ "$noOfActiveDisplays" -gt 1 ]; then
     if [ "$noOfActiveDisplays" -gt 2 ]; then
-      options="move left of ...\nmove right of ...\nmove above ...\nmove bellow ...\nmirror ...\n$options" 
+      options="mirror ...\n$options"
+      options="move above ...\n$options"
+      options="move bellow ...\n$options"
+      options="move left of ...\n$options"
+      options="move right of ...\n$options"
     else
-      options="move left of $another\nmove right of $another\nmove above $another\nmove bellow $another\nmirror $another\n$options" 
+      options="mirror $another \n$options"
+      options="move above $another \n$options"
+      options="move bellow $another \n$options"
+      options="move left of $another \n$options"
+      options="move right of $another \n$options"
     fi
     options="turn off\n$options"
   fi
