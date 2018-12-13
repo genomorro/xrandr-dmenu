@@ -28,8 +28,8 @@ if [ "$noOfActiveDisplays" -eq 2 ]; then
 fi
 
 function selectAnother {
-  if [ $another ]; then
-    echo $another
+  if [ ! -z "$another" ]; then
+    echo "$another"
   else
     connectedDisplays | grep -v "$display" | dmenu -i -l 10
   fi
