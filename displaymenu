@@ -40,9 +40,9 @@ if [ "$(isOn $display)" -eq 1 ]; then
   options="set resolution\nrotate left\nrotate right\ninvert\n$options"
   if [ "$noOfActiveDisplays" -gt 1 ]; then
     if [ "$noOfActiveDisplays" -gt 2 ]; then
-      options="move left of ...\nmove right of ...\nmove above ...\n move bellow ...\n$options" 
+      options="move left of ...\nmove right of ...\nmove above ...\nmove bellow ...\nmirror ...\n$options" 
     else
-      options="move left of $another\nmove right of $another\nmove above $another\nmove bellow $another\n$options" 
+      options="move left of $another\nmove right of $another\nmove above $another\nmove bellow $another\nmirror $another\n$options" 
     fi
     options="turn off\n$options"
   fi
@@ -76,6 +76,8 @@ case "$opt" in
     command="$command --above $(selectAnother)"  ;;
   "move bellow"*) 
     command="$command --bellow $(selectAnother)"  ;;
+  "mirror"*)
+    command="$command --same-as $(selectAnother)"  ;;
 esac
 
 if [ "$(echo -e "no\nyes" | dmenu -i -p "run: $command")" == "yes" ]; then
