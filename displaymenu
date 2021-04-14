@@ -58,7 +58,7 @@ function selectAnother {
 }
 
 options="cancel"
-if [ "$(isOn $display)" -gt 0 ]; then
+if [ "$(isOn $display)" -eq 1 ]; then
   options="set resolution\nrotate left\nrotate right\ninvert\nnormal\n$options"
   if [ "$noOfActiveDisplays" -gt 1 ]; then
     if [ "$noOfActiveDisplays" -gt 2 ]; then
