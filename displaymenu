@@ -29,7 +29,7 @@ noOfActiveDisplays="$( \
 )"
 
 function isOn {
-  xrandr --listactivemonitors | grep $1 | wc -l
+    xrandr --listactivemonitors | grep -w $1 | wc -l
 }
 
 display=$(connectedDisplays | dmenu -i -l 10)
@@ -40,7 +40,7 @@ if [ "$noOfActiveDisplays" -eq 2 ]; then
   another="$( \
     xrandr --listactivemonitors \
     | grep -vi 'Monitors:' \
-    | grep -v $display \
+    | grep -wv $display \
     | rev \
     | cut -d ' ' -f 1 \
     | rev \
